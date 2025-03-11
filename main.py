@@ -10,6 +10,7 @@ from common.exceptions.not_found import NotFoundError, NotFoundException
 from dotenv import load_dotenv
 import os
 from routers.authorization_router import authorization_router
+from routers.health import health_router
 
 load_dotenv()
 
@@ -34,6 +35,7 @@ app = FastAPI(root_path="/api/authorization-service", title="Authorization Servi
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+
 ]
 
 app.add_middleware(
@@ -45,7 +47,7 @@ app.add_middleware(
 )
 
 app.include_router(authorization_router, tags=["Authorization"], prefix="/api/authorize")
-
+app.include_router(health_router, tags=["Health"], prefix="/api")
 
 @app.exception_handler(BadRequestException)
 async def bad_request_exception_handler(request, exc: BadRequestException):
