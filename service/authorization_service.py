@@ -1,11 +1,12 @@
 import jwt
 import os
-from typing import Optional
 
 from models.endpoints.authorize_request import AuthorizeRequestUnauthorizedErrorEnum, raise_unauthorized_error, raise_forbidden_error, UserDetails, AuthorizeRequestDTO
-from models.common.credentials import CredentialsDTO
-from dotenv import load_dotenv
-
+from models.common.credentials import CredentialsDTO, CredentialsType
+from dotenv import load_dotenv  
+from persistence.dao.api_key_dao import ApiKeyDao
+from persistence.api_key_persistence import ApiKeyPersistence
+from typing import Optional
 load_dotenv()
 
 class AuthorizationService:
@@ -17,11 +18,11 @@ class AuthorizationService:
     #     if not has_access:
     #         raise_forbidden_error(AuthorizeRequestForbiddenErrorEnum.ACCESS_DENIED)
 
-    # def __get_api_key(self, credential: str) -> ApiKeyDao:
-    #     api_key_dao: Optional[ApiKeyDao] = ApiKeyPersistence().get(credential)
-    #     if not api_key_dao:
-    #         raise_unauthorized_error(AuthorizeRequestUnauthorizedErrorEnum.API_KEY_NOT_FOUND)
-    #     return api_key_dao
+    def __get_api_key(self, credential: str) -> ApiKeyDao:
+        api_key_dao: Optional[ApiKeyDao] = ApiKeyPersistence().get(credential)
+        if not api_key_dao:
+            raise_unauthorized_error(AuthorizeRequestUnauthorizedErrorEnum.API_KEY_NOT_FOUND)
+        return api_key_dao
 
     def __decode_token(self, token: str) -> UserDetails:
         try:
@@ -48,17 +49,20 @@ class AuthorizationService:
         return user_details
     
     
-    # def __authorize_api_key(self, credential: CredentialsDTO, method_endpoint: str) -> UserDetails:
-    #     api_key_dao: ApiKeyDao = self.__get_api_key(credential.credential)
+    def __authorize_api_key(self, credential: CredentialsDTO, method_endpoint: str) -> UserDetails:
+        api_key_dao: ApiKeyDao = self.__get_api_key(credential.credential)
 
-    #     self.__check_access(api_key_dao.roles, method_endpoint)
+        # self.__check_access(api_key_dao.roles, method_endpoint)
 
-    #     if credential.request_initiator:
-    #         self.__check_access(credential.request_initiator.roles, method_endpoint)
-    #         return UserDetails(id=credential.request_initiator.id, roles=credential.request_initiator.roles, system_carrier=True)
+        if credential.request_initiator:
+            # self.__check_access(credential.request_initiator.roles, method_endpoint)
+            return UserDetails(id=credential.request_initiator.id, roles=credential.request_initiator.roles, system_carrier=True)
         
-    #     return UserDetails(api_key_id=api_key_dao.id, roles=api_key_dao.roles, system_carrier=True)
+        return UserDetails(api_key_id=api_key_dao.id, roles=api_key_dao.roles, system_carrier=True)
 
-    def authorize_request(self, credential: CredentialsDTO) -> UserDetails:
-        return self.__authorize_token(credential.credential)
+    def authorize_request(self, credential: CredentialsDTO, request: AuthorizeRequestDTO) -> UserDetails:
+        if credential.type == CredentialsType.API_KEY:
+            return self.__authorize_api_key(credential, request.method_endpoint)
+        else:
+            return self.__authorize_token(credential.credential, request.method_endpoint)
         
