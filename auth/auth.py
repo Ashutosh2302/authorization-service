@@ -1,7 +1,7 @@
 from fastapi import Request, Depends, Header
 from service.authorization_service import AuthorizationService
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, APIKeyHeader
-from typing import Optional
+from typing import Optional, List
 from models.endpoints.authorize_request import UserDetails, AuthorizeRequestUnauthorizedErrorEnum, raise_unauthorized_error
 from models.common.credentials import CredentialsDTO, CredentialsType, RequestedInitiatorUserHeaders
 from models.endpoints.authorize_request import AuthorizeRequestDTO
@@ -18,7 +18,7 @@ def jwt_auth(
 
 def request_initiator_user_info(
     id: Optional[str] = Header(alias="X-Requested-By-User-Id", default=None),
-    roles: Optional[str] = Header(alias="X-Requested-By-User-Roles", default=None),
+    roles: Optional[List[str]] = Header(alias="X-Requested-By-User-Roles", default=None),
 ) -> Optional[RequestedInitiatorUserHeaders]:
     if not id or not roles:
         return None
@@ -36,6 +36,7 @@ async def credentials(
     user_headers: Optional[RequestedInitiatorUserHeaders] = Depends(request_initiator_user_info),
     api_key: Optional[CredentialsDTO] = Depends(api_key_auth),
 ) -> CredentialsDTO:
+
     if not api_key and not jwt:
         raise_unauthorized_error(AuthorizeRequestUnauthorizedErrorEnum.NO_TOKEN_OR_API_KEY_PROVIDED)
     credential = api_key if api_key is not None else jwt
