@@ -49,7 +49,7 @@ class AuthorizationService:
         return user_details
     
     
-    def __authorize_api_key(self, credential: CredentialsDTO, method_endpoint: str) -> UserDetails:
+    def __authorize_api_key(self, credential: CredentialsDTO) -> UserDetails:
         api_key_dao: ApiKeyDao = self.__get_api_key(credential.credential)
 
         # self.__check_access(api_key_dao.roles, method_endpoint)
@@ -60,9 +60,9 @@ class AuthorizationService:
         
         return UserDetails(api_key_id=api_key_dao.id, roles=api_key_dao.roles, system_carrier=True)
 
-    def authorize_request(self, credential: CredentialsDTO, request: AuthorizeRequestDTO) -> UserDetails:
+    def authorize_request(self, credential: CredentialsDTO) -> UserDetails:
         if credential.type == CredentialsType.API_KEY:
-            return self.__authorize_api_key(credential, request.method_endpoint)
+            return self.__authorize_api_key(credential)
         else:
-            return self.__authorize_token(credential.credential, request.method_endpoint)
+            return self.__authorize_token(credential.credential)
         
