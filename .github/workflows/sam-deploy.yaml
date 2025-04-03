@@ -40,4 +40,4 @@ jobs:
             --parameter-overrides \
             "MongoDBUrl=\"${{ secrets.MONGODB_URL }}\" \
             MongoDBName=\"${{ secrets.MONGODB_DB_NAME }}\" \
-            SecretKey=\"${{ secrets.SECRET_KEY }}\"""
+            SecretKey=\"${{ secrets.SECRET_KEY }}\""
