@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Authorization Service FastAPI Application
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1536
+    Environment:
+      Variables:
+        MONGODB_DB_NAME: !Ref MongoDBName
+        MONGODB_URL: !Ref MongoDBUrl
+        SECRET_KEY: !Ref SecretKey
+        PYTHONPATH: "/var/task"
+        LOG_LEVEL: "INFO"
+
+Parameters:
+  MongoDBName:
+    Type: String
+    Description: MongoDB database name
+    Default: lawiq
+
+  MongoDBUrl:
+    Type: String
+    Description: MongoDB connection URL
+    NoEcho: true
+
+  SecretKey:
+    Type: String
+    Description: Secret key for JWT token generation
+    NoEcho: true
+
+Resources:
+  AuthorizationServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: main.handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+                - s3:DeleteObject
+                - s3:ListBucket
+              Resource:
+                - "arn:aws:s3:::lawiq-resume/*"
+                - "arn:aws:s3:::lawiq-resume"
+                - "arn:aws:s3:::extra-curricular-certificates/*"
+                - "arn:aws:s3:::extra-curricular-certificates"
+                - "arn:aws:s3:::cocurricular-certificates/*"
+                - "arn:aws:s3:::cocurricular-certificates"
+                - "arn:aws:s3:::internship-certificates/*"
+                - "arn:aws:s3:::internship-certificates"
+      Layers:
+        - !Sub arn:aws:lambda:${AWS::Region}:017000801446:layer:AWSLambdaPowertoolsPythonV2:48
+      FunctionUrlConfig:
+        AuthType: NONE
+
+Outputs:
+  AuthorizationServiceFunction:
+    Description: "Authorization Service Lambda Function ARN"
+    Value: !GetAtt AuthorizationServiceFunction.Arn
+
+  AuthorizationServiceFunctionUrl:
+    Description: "URL for the Lambda function"
+    Value: !GetAtt AuthorizationServiceFunctionUrl.FunctionUrl
