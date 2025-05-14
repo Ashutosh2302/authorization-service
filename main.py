@@ -46,7 +46,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(authorization_router, tags=["Authorization"], prefix="/api/authorize")
+app.include_router(authorization_router, tags=["Authorization"], prefix="/v1/authorize")
 app.include_router(health_router, tags=["Health"], prefix="/api")
 
 @app.exception_handler(BadRequestException)
